@@ -2,6 +2,7 @@ package pl.edu.agh.agents.controller;
 
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
@@ -21,7 +22,7 @@ public class ControllerAgent extends Agent {
     private int preferredTemperature;
     private int currentTemperature;
     private AID[] temperatureSensors;
-    private int interval = 20000;
+    private int interval = 10000;
 
     protected void setup() {
         logger.info("Controller agent " + getAID().getLocalName() + " created.");
@@ -61,6 +62,9 @@ public class ControllerAgent extends Agent {
                 logger.info("Searching for temperature sensors.");
                 DFAgentDescription[] result = DFService.search(myAgent, template);
                 temperatureSensors = new AID[result.length];
+                for (int i = 0; i < result.length; ++i) {
+                    temperatureSensors[i] = result[i].getName();
+                }
                 if(result.length == 0)
                     logger.info("Not found any temperature sensor.");
                 else
@@ -74,9 +78,6 @@ public class ControllerAgent extends Agent {
 
     private class GetTemperatureBehaviour extends OneShotBehaviour {
 
-        private int repliesCount = 0;
-        private int meanTemperature = 0;
-
         @Override
         public void action() {
             logger.info("Sending temperature requests to sensors.");
@@ -84,26 +85,43 @@ public class ControllerAgent extends Agent {
             ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
             for(AID temperatureSensor : temperatureSensors) {
                 msg.addReceiver(temperatureSensor);
+                logger.info("Sent temperature request to: " + temperatureSensor.getLocalName());
             }
             msg.setContent("get");
             msg.setConversationId("get-temperature");
             myAgent.send(msg);
+            myAgent.addBehaviour(new ReceiveTemperatureBehaviour());
+        }
 
-            /* Receive reply */
+    }
+
+    private class ReceiveTemperatureBehaviour extends Behaviour {
+
+        private int repliesCount = 0;
+        private int temperatureSum = 0;
+
+        @Override
+        public void action() {
             MessageTemplate messageTemplate = MessageTemplate.MatchConversationId("get-temperature");
             ACLMessage reply = myAgent.receive(messageTemplate);
             if (reply != null && reply.getPerformative() == ACLMessage.INFORM) {
                 repliesCount++;
                 int temp = Integer.parseInt(reply.getContent());
-                meanTemperature += temp;
-                if (repliesCount >= temperatureSensors.length) {
-                    // received all replies
-                    meanTemperature = meanTemperature / temperatureSensors.length;
-                    currentTemperature = meanTemperature;
-                    logger.info("Got all responses, current temperature: " + currentTemperature);
-                }
+                temperatureSum += temp;
             } else {
                 block();
+            }
+        }
+
+        @Override
+        public boolean done() {
+            if (repliesCount >= temperatureSensors.length) {
+                temperatureSum = temperatureSum / temperatureSensors.length;
+                currentTemperature = temperatureSum;
+                logger.info("Got all responses, current temperature: " + currentTemperature);
+                return true;
+            } else {
+                return false;
             }
         }
     }

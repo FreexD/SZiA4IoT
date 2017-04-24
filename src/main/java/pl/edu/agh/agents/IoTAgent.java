@@ -2,6 +2,10 @@ package pl.edu.agh.agents;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.slf4j.Logger;
@@ -28,6 +32,7 @@ public class IoTAgent extends Agent {
     @Override
     protected void setup(){
         logger.info("IoT agent " + getAID().getName() + " initialized.");
+        registerSensor();
         addBehaviour(new IoTReceivingBehavior());
     }
 
@@ -45,6 +50,21 @@ public class IoTAgent extends Agent {
 
     private void setTemperature(int temperature){
         this.temperature = temperature;
+    }
+
+    private void registerSensor(){
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("temperature-sensor");
+        sd.setName("JADE-temperature-sensor");
+        dfd.addServices(sd);
+        try {
+            DFService.register(this, dfd);
+        }
+        catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
     }
 
     /**
