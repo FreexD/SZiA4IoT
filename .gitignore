@@ -41,3 +41,5 @@ buildNumber.properties
 
 # End of https://www.gitignore.io/api/java,maven
 /.idea/
+/APDescription.txt
+/MTPs-Main-Container.txt

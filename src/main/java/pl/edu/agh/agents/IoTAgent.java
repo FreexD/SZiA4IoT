@@ -22,6 +22,7 @@ public class IoTAgent extends Agent {
     /**
      * Run on agent initialization.
      */
+    @Override
     protected void setup(){
         System.out.println("IoT agent " + getAID().getName() + " initialized.");
         addBehaviour(new IoTReceivingBehavior());
@@ -30,6 +31,7 @@ public class IoTAgent extends Agent {
     /**
      * Run on agent termination. Do cleanup stuff here.
      */
+    @Override
     protected void takeDown(){
         System.out.println("IoT agent " + getAID().getName() + " terminating.");
     }
