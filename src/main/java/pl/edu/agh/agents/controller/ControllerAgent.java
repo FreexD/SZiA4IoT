@@ -8,6 +8,8 @@ import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,7 @@ public class ControllerAgent extends Agent {
 
     private ControllerGui gui;
     private int preferredTemperature;
+    private int currentTemperature;
     private AID[] temperatureSensors;
     private int interval = 20000;
 
@@ -50,7 +53,6 @@ public class ControllerAgent extends Agent {
 
         @Override
         protected void onTick() {
-            logger.info("Getting temperature from sensors.");
             DFAgentDescription template = new DFAgentDescription();
             ServiceDescription sd = new ServiceDescription();
             sd.setType("temperature-sensor");
@@ -61,8 +63,47 @@ public class ControllerAgent extends Agent {
                 temperatureSensors = new AID[result.length];
                 if(result.length == 0)
                     logger.info("Not found any temperature sensor.");
+                else
+                    myAgent.addBehaviour(new GetTemperatureBehaviour());
             } catch (FIPAException fe) {
+                logger.warn("Error during search.");
                 fe.printStackTrace();
+            }
+        }
+    }
+
+    private class GetTemperatureBehaviour extends OneShotBehaviour {
+
+        private int repliesCount = 0;
+        private int meanTemperature = 0;
+
+        @Override
+        public void action() {
+            logger.info("Sending temperature requests to sensors.");
+            /* Send request */
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            for(AID temperatureSensor : temperatureSensors) {
+                msg.addReceiver(temperatureSensor);
+            }
+            msg.setContent("get");
+            msg.setConversationId("get-temperature");
+            myAgent.send(msg);
+
+            /* Receive reply */
+            MessageTemplate messageTemplate = MessageTemplate.MatchConversationId("get-temperature");
+            ACLMessage reply = myAgent.receive(messageTemplate);
+            if (reply != null && reply.getPerformative() == ACLMessage.INFORM) {
+                repliesCount++;
+                int temp = Integer.parseInt(reply.getContent());
+                meanTemperature += temp;
+                if (repliesCount >= temperatureSensors.length) {
+                    // received all replies
+                    meanTemperature = meanTemperature / temperatureSensors.length;
+                    currentTemperature = meanTemperature;
+                    logger.info("Got all responses, current temperature: " + currentTemperature);
+                }
+            } else {
+                block();
             }
         }
     }
