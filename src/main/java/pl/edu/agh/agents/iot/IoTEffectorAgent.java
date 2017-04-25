@@ -73,7 +73,8 @@ public class IoTEffectorAgent extends Agent {
 
     private class OnSetTemperatureReceivingBehavior extends CyclicBehaviour {
         public void action() {
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+            MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
+                    MessageTemplate.MatchConversationId("set-temperature"));
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
                 String message = msg.getContent();

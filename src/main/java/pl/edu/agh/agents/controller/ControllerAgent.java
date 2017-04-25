@@ -120,6 +120,7 @@ public class ControllerAgent extends Agent {
                 temperatureSum = temperatureSum / temperatureSensors.length;
                 currentTemperature = temperatureSum;
                 logger.info("Got all responses, current temperature: " + currentTemperature);
+                gui.setCurrentTemperatureLabelText(String.valueOf(currentTemperature));
                 return true;
             } else {
                 return false;
