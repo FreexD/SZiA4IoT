@@ -22,6 +22,7 @@ public class ControllerAgent extends Agent {
     private int preferredTemperature;
     private int currentTemperature;
     private AID[] temperatureSensors;
+    private AID[] temperatureEffectors;
     private int interval = 10000;
 
     protected void setup() {
@@ -119,10 +120,53 @@ public class ControllerAgent extends Agent {
                 temperatureSum = temperatureSum / temperatureSensors.length;
                 currentTemperature = temperatureSum;
                 logger.info("Got all responses, current temperature: " + currentTemperature);
+                myAgent.addBehaviour(new SearchEffectorsBehaviour());
                 return true;
             } else {
                 return false;
             }
+        }
+    }
+
+    private class SearchEffectorsBehaviour extends OneShotBehaviour {
+
+        @Override
+        public void action() {
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("temperature-effector");
+            template.addServices(sd);
+            try {
+                logger.info("Searching for temperature effectors.");
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                temperatureEffectors = new AID[result.length];
+                for (int i = 0; i < result.length; ++i) {
+                    temperatureEffectors[i] = result[i].getName();
+                }
+                if(result.length == 0)
+                    logger.info("Not found any temperature effector.");
+                else
+                    myAgent.addBehaviour(new SendPreferredTemperatureToEffectorBehaviour());
+            } catch (FIPAException fe) {
+                logger.warn("Error during search.");
+                fe.printStackTrace();
+            }
+        }
+    }
+
+    private class SendPreferredTemperatureToEffectorBehaviour extends OneShotBehaviour {
+
+        @Override
+        public void action() {
+            logger.info("Sending preferred temperature to effectors.");
+            /* Send request */
+            ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+            for(AID temperatureEffector : temperatureEffectors) {
+                msg.addReceiver(temperatureEffector);
+                logger.info("Sent preferred temperature to: " + temperatureEffector.getLocalName());
+            }
+            msg.setContent(String.valueOf(preferredTemperature));
+            myAgent.send(msg);
         }
     }
 
