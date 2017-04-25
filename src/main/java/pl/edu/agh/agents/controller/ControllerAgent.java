@@ -22,11 +22,12 @@ public class ControllerAgent extends Agent {
     private int preferredTemperature;
     private int currentTemperature;
     private AID[] temperatureSensors;
+    private AID[] temperatureEffectors;
     private int interval = 10000;
 
     protected void setup() {
         logger.info("Controller agent " + getAID().getLocalName() + " created.");
-        preferredTemperature = 22;
+        setPreferredTemperature(22);
         gui = new ControllerGui(this);
         gui.display();
         addBehaviour(new SearchSensorsBehaviour(this, interval));
@@ -42,13 +43,14 @@ public class ControllerAgent extends Agent {
             public void action() {
                 preferredTemperature = temperature;
                 logger.info("Set preferred temperature to: " + preferredTemperature);
+                myAgent.addBehaviour(new SearchEffectorsBehaviour());
             }
         });
     }
 
     private class SearchSensorsBehaviour extends TickerBehaviour {
 
-        public SearchSensorsBehaviour(Agent a, long period) {
+        SearchSensorsBehaviour(Agent a, long period) {
             super(a, period);
         }
 
@@ -87,7 +89,6 @@ public class ControllerAgent extends Agent {
                 msg.addReceiver(temperatureSensor);
                 logger.info("Sent temperature request to: " + temperatureSensor.getLocalName());
             }
-            msg.setContent("get");
             msg.setConversationId("get-temperature");
             myAgent.send(msg);
             myAgent.addBehaviour(new ReceiveTemperatureBehaviour());
@@ -119,10 +120,54 @@ public class ControllerAgent extends Agent {
                 temperatureSum = temperatureSum / temperatureSensors.length;
                 currentTemperature = temperatureSum;
                 logger.info("Got all responses, current temperature: " + currentTemperature);
+                gui.setCurrentTemperatureLabelText(String.valueOf(currentTemperature));
                 return true;
             } else {
                 return false;
             }
+        }
+    }
+
+    private class SearchEffectorsBehaviour extends OneShotBehaviour {
+
+        @Override
+        public void action() {
+            DFAgentDescription template = new DFAgentDescription();
+            ServiceDescription sd = new ServiceDescription();
+            sd.setType("temperature-effector");
+            template.addServices(sd);
+            try {
+                logger.info("Searching for temperature effectors.");
+                DFAgentDescription[] result = DFService.search(myAgent, template);
+                temperatureEffectors = new AID[result.length];
+                for (int i = 0; i < result.length; ++i) {
+                    temperatureEffectors[i] = result[i].getName();
+                }
+                if(result.length == 0)
+                    logger.info("Not found any temperature effector.");
+                else
+                    myAgent.addBehaviour(new SendPreferredTemperatureToEffectorBehaviour());
+            } catch (FIPAException fe) {
+                logger.warn("Error during search.");
+                fe.printStackTrace();
+            }
+        }
+    }
+
+    private class SendPreferredTemperatureToEffectorBehaviour extends OneShotBehaviour {
+
+        @Override
+        public void action() {
+            logger.info("Sending preferred temperature to effectors.");
+            /* Send request */
+            ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
+            for(AID temperatureEffector : temperatureEffectors) {
+                msg.addReceiver(temperatureEffector);
+                logger.info("Sent preferred temperature to: " + temperatureEffector.getLocalName());
+            }
+            msg.setConversationId("set-temperature");
+            msg.setContent(String.valueOf(preferredTemperature));
+            myAgent.send(msg);
         }
     }
 

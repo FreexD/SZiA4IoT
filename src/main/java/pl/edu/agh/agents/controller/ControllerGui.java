@@ -11,12 +11,14 @@ public class ControllerGui extends JFrame {
 
     private ControllerAgent agent;
     private JTextField preferredTemperatureField;
+    private JLabel currentTemperatureLabel;
 
     ControllerGui(ControllerAgent agent){
         this.agent = agent;
 
         createPreferredTemperatureField();
         createPreferredTemperatureButton();
+        createCurrentTemperatureLabel();
 
         addWindowListener(new	WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -50,6 +52,21 @@ public class ControllerGui extends JFrame {
         JPanel p = new JPanel();
         p.add(addButton);
         getContentPane().add(p, BorderLayout.SOUTH);
+    }
+
+    private void createCurrentTemperatureLabel() {
+        JPanel p = new JPanel();
+        p.setLayout(new GridLayout(2, 2));
+        p.add(new JLabel("Temperature: "));
+        currentTemperatureLabel = new JLabel("0");
+        currentTemperatureLabel.setFont(new Font("Serif", Font.BOLD, 12));
+        currentTemperatureLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        p.add(currentTemperatureLabel);
+        getContentPane().add(p, BorderLayout.NORTH);
+    }
+
+    void setCurrentTemperatureLabelText(String text){
+        this.currentTemperatureLabel.setText(text);
     }
 
     private class SetPreferredTemperatureListener implements ActionListener {
