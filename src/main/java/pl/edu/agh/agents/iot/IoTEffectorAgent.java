@@ -10,6 +10,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pl.edu.agh.agents.room.TemperatureAgent;
 
 /**
  * Created by mw on 24/04/17.
@@ -25,20 +26,19 @@ public class IoTEffectorAgent extends Agent {
     private static final int BOTTOM_TEMPERATURE_LIMIT = -20;
     private static final int TOP_TEMPERATURE_LIMIT = 30;
     private static final Logger logger = LoggerFactory.getLogger(IoTEffectorAgent.class);
+    private TemperatureAgent temperatureAgent;
 
-    /**
-     * Run on agent initialization.
-     */
+    public IoTEffectorAgent(TemperatureAgent temperatureAgent){
+        this.temperatureAgent = temperatureAgent;
+    }
+
     @Override
     protected void setup(){
         logger.info("IoT agent " + getAID().getName() + " initialized.");
         registerEffector();
-        addBehaviour(new IoTReceivingBehavior());
+        addBehaviour(new OnSetTemperatureReceivingBehavior());
     }
 
-    /**
-     * Run on agent termination. Do cleanup stuff here.
-     */
     @Override
     protected void takeDown(){
         logger.info("Temperature effector agent " + getAID().getName() + " terminating.");
@@ -67,43 +67,29 @@ public class IoTEffectorAgent extends Agent {
         }
     }
 
-    /**
-     * Cyclic receiving behavior for IoT device.
-     *
-     * @see CyclicBehaviour
-     * @see MessageTemplate
-     * @see ACLMessage
-     */
-    private class IoTReceivingBehavior extends CyclicBehaviour {
+    private class OnSetTemperatureReceivingBehavior extends CyclicBehaviour {
         public void action() {
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
                 String message = msg.getContent();
                 ACLMessage reply = msg.createReply();
-
-                if(message.equals("get")){
-                    reply.setPerformative(ACLMessage.INFORM);
-                    reply.setContent(String.valueOf(getTemperature()));
-                    logger.info("Temperature is " + getTemperature() + ".");
-                } else {
-                    try {
-                        Integer suggestedTemperature = Integer.parseInt(message);
-                        if(suggestedTemperature >= BOTTOM_TEMPERATURE_LIMIT && suggestedTemperature <= TOP_TEMPERATURE_LIMIT){
-                            reply.setPerformative(ACLMessage.INFORM);
-                            setTemperature(suggestedTemperature);
-                            reply.setContent(String.valueOf(getTemperature()));
-                            logger.info("Temperature was set to " + getTemperature() + ".");
-                        } else {
-                            reply.setPerformative(ACLMessage.FAILURE);
-                            reply.setContent("Temperature is not between " + BOTTOM_TEMPERATURE_LIMIT + " and " + TOP_TEMPERATURE_LIMIT + ".");
-                            logger.info("Temperature is not between " + BOTTOM_TEMPERATURE_LIMIT + " and " + TOP_TEMPERATURE_LIMIT + ".");
-                        }
-                    } catch (NumberFormatException e) {
+                try {
+                    Integer suggestedTemperature = Integer.parseInt(message);
+                    if(suggestedTemperature >= BOTTOM_TEMPERATURE_LIMIT && suggestedTemperature <= TOP_TEMPERATURE_LIMIT){
+                        reply.setPerformative(ACLMessage.INFORM);
+                        setTemperature(suggestedTemperature);
+                        reply.setContent(String.valueOf(getTemperature()));
+                        logger.info("Effector temperature was changed to " + getTemperature() + ".");
+                    } else {
                         reply.setPerformative(ACLMessage.FAILURE);
-                        reply.setContent("Temperature is not a valid integer.");
-                        logger.info("Temperature is not a valid integer.");
+                        reply.setContent("Suggested effector temperature was not between " + BOTTOM_TEMPERATURE_LIMIT + " and " + TOP_TEMPERATURE_LIMIT + ".");
+                        logger.info("Suggested effector temperature was not between " + BOTTOM_TEMPERATURE_LIMIT + " and " + TOP_TEMPERATURE_LIMIT + ".");
                     }
+                } catch (NumberFormatException e) {
+                    reply.setPerformative(ACLMessage.FAILURE);
+                    reply.setContent("Suggested effector temperature was not a valid integer.");
+                    logger.info("Suggested effector temperature was not a valid integer.");
                 }
                 myAgent.send(reply);
             } else {
@@ -112,4 +98,6 @@ public class IoTEffectorAgent extends Agent {
 
         }
     }
+
+    //add ticker behavior for increasing temperature
 }

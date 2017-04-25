@@ -48,7 +48,7 @@ public class ControllerAgent extends Agent {
 
     private class SearchSensorsBehaviour extends TickerBehaviour {
 
-        public SearchSensorsBehaviour(Agent a, long period) {
+        SearchSensorsBehaviour(Agent a, long period) {
             super(a, period);
         }
 
