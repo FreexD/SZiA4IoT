@@ -29,8 +29,8 @@ public class AgentSystem {
         try {
             TemperatureAgent temperatureAgent = new TemperatureAgent();
             ac.acceptNewAgent("temperature", temperatureAgent).start();
-            ac.acceptNewAgent("iot1", new IoTSensorAgent(temperatureAgent)).start();
-            ac.acceptNewAgent("iot2", new IoTEffectorAgent(temperatureAgent)).start();
+            ac.acceptNewAgent("sensor", new IoTSensorAgent(temperatureAgent)).start();
+            ac.acceptNewAgent("effector", new IoTEffectorAgent(temperatureAgent)).start();
             ac.acceptNewAgent("controller", new ControllerAgent()).start();
         } catch (StaleProxyException e) {
             throw new Error(e);
