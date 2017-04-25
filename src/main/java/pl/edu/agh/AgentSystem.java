@@ -7,6 +7,7 @@ import jade.wrapper.StaleProxyException;
 import pl.edu.agh.agents.IoTAgent;
 
 import jade.util.leap.Properties;
+import pl.edu.agh.agents.controller.ControllerAgent;
 
 /**
  * Created by mw on 24/04/17.
@@ -26,6 +27,7 @@ public class AgentSystem {
         try {
             ac.acceptNewAgent("iot1", new IoTAgent()).start();
             ac.acceptNewAgent("iot2", new IoTAgent()).start();
+            ac.acceptNewAgent("controller", new ControllerAgent()).start();
         } catch (StaleProxyException e) {
             throw new Error(e);
         }
