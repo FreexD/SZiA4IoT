@@ -31,7 +31,7 @@ public class IoTSensorAgent extends Agent {
      */
     @Override
     protected void setup(){
-        logger.info("IoT agent " + getAID().getName() + " initialized.");
+        logger.info("Temperature sensor agent " + getAID().getName() + " initialized.");
         registerSensor();
         addBehaviour(new IoTReceivingBehavior());
     }
@@ -41,7 +41,7 @@ public class IoTSensorAgent extends Agent {
      */
     @Override
     protected void takeDown(){
-        logger.info("IoT agent " + getAID().getName() + " terminating.");
+        logger.info("Temperature sensor agent " + getAID().getName() + " terminating.");
     }
 
     private int getTemperature(){

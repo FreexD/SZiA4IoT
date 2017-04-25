@@ -19,22 +19,22 @@ import org.slf4j.LoggerFactory;
  * @author mw
  * @see Agent
  */
-public class RoomAgent extends Agent {
+public class TemperatureAgent extends Agent {
 
     private int temperature;
-    private static final Logger logger = LoggerFactory.getLogger(RoomAgent.class);
+    private static final Logger logger = LoggerFactory.getLogger(TemperatureAgent.class);
 
     @Override
     protected void setup(){
-        logger.info("IoT agent " + getAID().getName() + " initialized.");
-        registerSensor();
+        logger.info("Temperature agent " + getAID().getName() + " initialized.");
+        registerTemperatureAgent();
         addBehaviour(new OnGetTemperatureReceivingBehavior());
         addBehaviour(new OnEffectorSetTemperatureReceivingBehavior());
     }
 
     @Override
     protected void takeDown(){
-        logger.info("IoT agent " + getAID().getName() + " terminating.");
+        logger.info("Temperature agent " + getAID().getName() + " terminating.");
     }
 
     private int getTemperature(){
@@ -45,12 +45,12 @@ public class RoomAgent extends Agent {
         this.temperature = temperature;
     }
 
-    private void registerSensor(){
+    private void registerTemperatureAgent(){
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("temperature-sensor");
-        sd.setName("JADE-temperature-sensor");
+        sd.setType("temperature");
+        sd.setName("JADE-temperature");
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);

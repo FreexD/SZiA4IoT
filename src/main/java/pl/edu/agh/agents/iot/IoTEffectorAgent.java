@@ -32,7 +32,7 @@ public class IoTEffectorAgent extends Agent {
     @Override
     protected void setup(){
         logger.info("IoT agent " + getAID().getName() + " initialized.");
-        registerSensor();
+        registerEffector();
         addBehaviour(new IoTReceivingBehavior());
     }
 
@@ -41,7 +41,7 @@ public class IoTEffectorAgent extends Agent {
      */
     @Override
     protected void takeDown(){
-        logger.info("IoT agent " + getAID().getName() + " terminating.");
+        logger.info("Temperature effector agent " + getAID().getName() + " terminating.");
     }
 
     private int getTemperature(){
@@ -52,12 +52,12 @@ public class IoTEffectorAgent extends Agent {
         this.temperature = temperature;
     }
 
-    private void registerSensor(){
+    private void registerEffector(){
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.setName(getAID());
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("temperature-sensor");
-        sd.setName("JADE-temperature-sensor");
+        sd.setType("temperature-effector");
+        sd.setName("JADE-temperature-effector");
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
