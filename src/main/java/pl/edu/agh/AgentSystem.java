@@ -9,6 +9,7 @@ import jade.util.leap.Properties;
 import pl.edu.agh.agents.controller.ControllerAgent;
 import pl.edu.agh.agents.iot.IoTEffectorAgent;
 import pl.edu.agh.agents.iot.IoTSensorAgent;
+import pl.edu.agh.agents.room.TemperatureAgent;
 
 /**
  * Created by mw on 24/04/17.
@@ -26,8 +27,10 @@ public class AgentSystem {
         Profile p = new ProfileImpl(pp);
         AgentContainer ac = jade.core.Runtime.instance().createMainContainer(p);
         try {
-            ac.acceptNewAgent("iot1", new IoTSensorAgent()).start();
-            ac.acceptNewAgent("iot2", new IoTEffectorAgent()).start();
+            TemperatureAgent temperatureAgent = new TemperatureAgent();
+            ac.acceptNewAgent("temperature", temperatureAgent).start();
+            ac.acceptNewAgent("iot1", new IoTSensorAgent(temperatureAgent)).start();
+            ac.acceptNewAgent("iot2", new IoTEffectorAgent(temperatureAgent)).start();
             ac.acceptNewAgent("controller", new ControllerAgent()).start();
         } catch (StaleProxyException e) {
             throw new Error(e);
