@@ -67,7 +67,6 @@ public class IoTSensorAgent extends Agent {
 
                 ACLMessage measureMsg = new ACLMessage(ACLMessage.REQUEST);
                 measureMsg.setConversationId("temperature-measurement");
-                measureMsg.setContent("get");
                 measureMsg.addReceiver(temperatureAgent.getAID());
                 myAgent.send(measureMsg);
                 addBehaviour(new OnTemperatureMeasurementReceivingBehavior(reply));
@@ -81,7 +80,7 @@ public class IoTSensorAgent extends Agent {
 
         private ACLMessage reply;
 
-        public OnTemperatureMeasurementReceivingBehavior(ACLMessage reply){
+        OnTemperatureMeasurementReceivingBehavior(ACLMessage reply){
             super();
             this.reply = reply;
         }

@@ -1,7 +1,9 @@
 package pl.edu.agh.agents.iot;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -23,6 +25,7 @@ import pl.edu.agh.agents.room.TemperatureAgent;
 public class IoTEffectorAgent extends Agent {
 
     private int temperature;
+    private static final int INTERVAL = 6000;
     private static final int BOTTOM_TEMPERATURE_LIMIT = -20;
     private static final int TOP_TEMPERATURE_LIMIT = 30;
     private static final Logger logger = LoggerFactory.getLogger(IoTEffectorAgent.class);
@@ -37,6 +40,7 @@ public class IoTEffectorAgent extends Agent {
         logger.info("IoT agent " + getAID().getName() + " initialized.");
         registerEffector();
         addBehaviour(new OnSetTemperatureReceivingBehavior());
+        addBehaviour(new ModifyTemperatureBehavior(this, INTERVAL));
     }
 
     @Override
@@ -100,4 +104,19 @@ public class IoTEffectorAgent extends Agent {
     }
 
     //add ticker behavior for increasing temperature
+    private class ModifyTemperatureBehavior extends TickerBehaviour {
+
+        ModifyTemperatureBehavior(Agent a, long period) {
+            super(a, period);
+        }
+
+        @Override
+        protected void onTick() {
+            ACLMessage modifyMsg = new ACLMessage(ACLMessage.PROPOSE);
+            modifyMsg.setConversationId("temperature-modification");
+            modifyMsg.setContent(String.valueOf(temperature));
+            modifyMsg.addReceiver(temperatureAgent.getAID());
+            myAgent.send(modifyMsg);
+        }
+    }
 }

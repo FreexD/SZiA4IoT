@@ -27,7 +27,6 @@ public class TemperatureAgent extends Agent {
     @Override
     protected void setup(){
         logger.info("Temperature agent " + getAID().getName() + " initialized.");
-        registerTemperatureAgent();
         addBehaviour(new OnGetTemperatureReceivingBehavior());
         addBehaviour(new OnEffectorSetTemperatureReceivingBehavior());
     }
@@ -45,33 +44,16 @@ public class TemperatureAgent extends Agent {
         this.temperature = temperature;
     }
 
-    private void registerTemperatureAgent(){
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("temperature");
-        sd.setName("JADE-temperature");
-        dfd.addServices(sd);
-        try {
-            DFService.register(this, dfd);
-        }
-        catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
-    }
-
     private class OnGetTemperatureReceivingBehavior extends CyclicBehaviour {
         public void action() {
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+            MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                    MessageTemplate.MatchConversationId("temperature-measurement"));
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
-                String message = msg.getContent();
                 ACLMessage reply = msg.createReply();
-                if(message.equals("get")){
-                    reply.setPerformative(ACLMessage.INFORM);
-                    reply.setContent(String.valueOf(getTemperature()));
-                    logger.info("Temperature is " + getTemperature() + ".");
-                }
+                reply.setPerformative(ACLMessage.INFORM);
+                reply.setContent(String.valueOf(getTemperature()));
+                logger.info("Temperature is " + getTemperature() + ".");
                 myAgent.send(reply);
             } else {
                 block();
@@ -81,7 +63,8 @@ public class TemperatureAgent extends Agent {
 
     private class OnEffectorSetTemperatureReceivingBehavior extends CyclicBehaviour {
         public void action() {
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+            MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.PROPOSE),
+                    MessageTemplate.MatchConversationId("temperature-modification"));
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
                 String message = msg.getContent();
@@ -95,12 +78,12 @@ public class TemperatureAgent extends Agent {
                         reply.setContent(String.valueOf(getTemperature()));
                         logger.info("Temperature was changed to " + getTemperature() + ".");
                     } else {
-                        reply.setPerformative(ACLMessage.INFORM);
+                        reply.setPerformative(ACLMessage.FAILURE);
                         reply.setContent("Temperature was not changed.");
                         logger.info("Temperature was not changed.");
                     }
                 } catch (NumberFormatException e) {
-                    reply.setPerformative(ACLMessage.INFORM);
+                    reply.setPerformative(ACLMessage.FAILURE);
                     reply.setContent("Suggested temperature was not a valid integer.");
                     logger.info("Suggested temperature is not a valid integer.");
                 }
