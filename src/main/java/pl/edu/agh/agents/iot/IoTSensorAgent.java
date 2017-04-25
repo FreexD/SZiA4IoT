@@ -2,6 +2,7 @@ package pl.edu.agh.agents.iot;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -58,22 +59,49 @@ public class IoTSensorAgent extends Agent {
 
     private class OnGetTemperatureReceivingBehavior extends CyclicBehaviour {
         public void action() {
-            MessageTemplate mt = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+            MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.REQUEST),
+                    MessageTemplate.MatchConversationId("get-temperature"));
             ACLMessage msg = myAgent.receive(mt);
             if(msg != null){
-                String message = msg.getContent();
                 ACLMessage reply = msg.createReply();
-                if(message.equals("get")){
-                    ACLMessage measureMsg = new ACLMessage(ACLMessage.REQUEST);
-                    measureMsg.setContent("get");
-                    measureMsg.addReceiver(temperatureAgent.getAID());
 
+                ACLMessage measureMsg = new ACLMessage(ACLMessage.REQUEST);
+                measureMsg.setConversationId("temperature-measurement");
+                measureMsg.setContent("get");
+                measureMsg.addReceiver(temperatureAgent.getAID());
+                myAgent.send(measureMsg);
+                addBehaviour(new OnTemperatureMeasurementReceivingBehavior(reply));
+            } else {
+                block();
+            }
+        }
+    }
+
+    private class OnTemperatureMeasurementReceivingBehavior extends OneShotBehaviour {
+
+        private ACLMessage reply;
+
+        public OnTemperatureMeasurementReceivingBehavior(ACLMessage reply){
+            super();
+            this.reply = reply;
+        }
+
+        public void action() {
+            MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchPerformative(ACLMessage.INFORM),
+                    MessageTemplate.MatchConversationId("temperature-measurement"));
+            ACLMessage msg = myAgent.receive(mt);
+            if(msg != null){
+                try {
+                    Integer measuredTemperature = Integer.parseInt(msg.getContent());
+                    reply.setContent(String.valueOf(measuredTemperature));
                     reply.setPerformative(ACLMessage.INFORM);
-//                    TODO
-//                    reply.setContent(String.valueOf(getTemperature()));
-//                    logger.info("Temperature is " + getTemperature() + ".");
+                    logger.info("Temperature is " + measuredTemperature + ".");
+                } catch (NumberFormatException e) {
+                    reply.setPerformative(ACLMessage.FAILURE);
+                    reply.setContent("Temperature measurement failed.");
+                    logger.info("Temperature measurement failed.");
                 }
-                myAgent.send(reply);
+                myAgent.send(this.reply);
             } else {
                 block();
             }
