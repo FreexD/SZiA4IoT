@@ -1,4 +1,4 @@
-package pl.edu.agh.agents;
+package pl.edu.agh.agents.iot;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -19,12 +19,12 @@ import org.slf4j.LoggerFactory;
  * @author mw
  * @see jade.core.Agent
  */
-public class IoTAgent extends Agent {
+public class IoTSensorAgent extends Agent {
 
     private int temperature;
     private static final int BOTTOM_TEMPERATURE_LIMIT = -20;
     private static final int TOP_TEMPERATURE_LIMIT = 30;
-    private static final Logger logger = LoggerFactory.getLogger(IoTAgent.class);
+    private static final Logger logger = LoggerFactory.getLogger(IoTSensorAgent.class);
 
     /**
      * Run on agent initialization.
