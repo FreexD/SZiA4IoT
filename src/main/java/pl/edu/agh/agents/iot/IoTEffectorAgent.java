@@ -45,6 +45,9 @@ public class IoTEffectorAgent extends Agent {
 
     @Override
     protected void takeDown(){
+        try {
+            DFService.deregister(this);
+        } catch (Exception ignored) {}
         logger.info("Temperature effector agent " + getAID().getName() + " terminating.");
     }
 

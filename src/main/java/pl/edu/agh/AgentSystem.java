@@ -10,6 +10,7 @@ import pl.edu.agh.agents.controller.ControllerAgent;
 import pl.edu.agh.agents.iot.IoTEffectorAgent;
 import pl.edu.agh.agents.iot.IoTSensorAgent;
 import pl.edu.agh.agents.room.TemperatureAgent;
+import pl.edu.agh.agents.supervisor.SupervisorAgent;
 
 /**
  * Created by mw on 24/04/17.
@@ -32,6 +33,7 @@ public class AgentSystem {
             ac.acceptNewAgent("sensor", new IoTSensorAgent(temperatureAgent)).start();
             ac.acceptNewAgent("effector", new IoTEffectorAgent(temperatureAgent)).start();
             ac.acceptNewAgent("controller", new ControllerAgent()).start();
+            ac.acceptNewAgent("supervisor", new SupervisorAgent()).start();
         } catch (StaleProxyException e) {
             throw new Error(e);
         }
