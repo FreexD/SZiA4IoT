@@ -39,6 +39,9 @@ public class IoTSensorAgent extends Agent {
 
     @Override
     protected void takeDown(){
+        try {
+            DFService.deregister(this);
+        } catch (Exception ignored) {}
         logger.info("Temperature sensor agent " + getAID().getName() + " terminating.");
     }
 

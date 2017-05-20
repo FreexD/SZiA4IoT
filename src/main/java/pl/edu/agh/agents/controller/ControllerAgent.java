@@ -23,11 +23,12 @@ public class ControllerAgent extends Agent {
     private int currentTemperature;
     private AID[] temperatureSensors;
     private AID[] temperatureEffectors;
-    private int interval = 10000;
+    private int interval = 5000;
 
     protected void setup() {
         logger.info("Controller agent " + getAID().getLocalName() + " created.");
         setPreferredTemperature(22);
+        registerController();
         gui = new ControllerGui(this);
         gui.display();
         addBehaviour(new SearchSensorsBehaviour(this, interval));
@@ -35,7 +36,25 @@ public class ControllerAgent extends Agent {
 
     protected void takeDown() {
         gui.dispose();
+        try {
+            DFService.deregister(this);
+        } catch (Exception ignored) {}
         logger.info("Controller agent " + getAID().getName() + " terminating.");
+    }
+
+    private void registerController(){
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("controller");
+        sd.setName("JADE-controller");
+        dfd.addServices(sd);
+        try {
+            DFService.register(this, dfd);
+        }
+        catch (FIPAException fe) {
+            fe.printStackTrace();
+        }
     }
 
     public void setPreferredTemperature(final int temperature) {
