@@ -32,6 +32,11 @@ public class SupervisorAgent extends Agent{
         logger.info("Supervisor agent " + getAID().getName() + " terminating.");
     }
 
+    public void saveControllerParameters(String name, boolean enabled, int min, int max){
+        //TODO implement
+        logger.info("Setting " + name + " to " + enabled + " " + min + " " + max);
+    }
+
     private class SearchControllersBehaviour extends TickerBehaviour {
 
         SearchControllersBehaviour(Agent a, long period) {

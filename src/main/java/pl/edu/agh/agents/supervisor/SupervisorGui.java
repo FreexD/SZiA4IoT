@@ -4,9 +4,7 @@ import jade.core.AID;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 
 public class SupervisorGui extends JFrame {
 
@@ -14,6 +12,7 @@ public class SupervisorGui extends JFrame {
     private JComboBox<String> box;
     private JTextField maxTemperatureField;
     private JTextField minTemperatureField;
+    private JRadioButton enabledButton;
     private JLabel currentTemperatureLabel;
 
     SupervisorGui(SupervisorAgent agent){
@@ -56,7 +55,7 @@ public class SupervisorGui extends JFrame {
         p.add(new JLabel("Status:"));
         ButtonGroup group = new ButtonGroup();
 
-        JRadioButton enabledButton = new JRadioButton("enabled");
+        enabledButton = new JRadioButton("enabled");
         enabledButton.setActionCommand("enabled");
         enabledButton.setSelected(true);
         group.add(enabledButton);
@@ -88,7 +87,7 @@ public class SupervisorGui extends JFrame {
 
     private void createSaveButton(){
         JButton addButton = new JButton("Save");
-        //addButton.addActionListener(new SetPreferredTemperatureListener());
+        addButton.addActionListener(new SaveControllerParametersListener());
         JPanel p = new JPanel();
         p.add(addButton);
         getContentPane().add(p, BorderLayout.SOUTH);
@@ -98,6 +97,25 @@ public class SupervisorGui extends JFrame {
         box.removeAllItems();
         for (AID controller : controllers) {
             box.addItem(controller.getName());
+        }
+    }
+
+    private class SaveControllerParametersListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent event) {
+            try {
+                String sMax = maxTemperatureField.getText().trim();
+                int max = Integer.valueOf(sMax);
+                String sMin = minTemperatureField.getText().trim();
+                int min = Integer.valueOf(sMin);
+                boolean enabled = enabledButton.isSelected();
+                String controllerName = (String) box.getSelectedItem();
+                agent.saveControllerParameters(controllerName, enabled, min, max);
+            }
+            catch (Exception exception) {
+                JOptionPane.showMessageDialog(SupervisorGui.this, "Wrong input value. " + exception.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
